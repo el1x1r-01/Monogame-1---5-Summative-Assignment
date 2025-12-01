@@ -19,11 +19,11 @@ namespace Monogame_1___5_Summative_Assignment
 
         Texture2D fenceForeTexture, fenceBackTexture, fieldTexture, frodoTexture, samTexture, pipTexture, 
             carrotTexture, heartTexture, startButtonTexture, backButtonTexture, cursorTexture, quitButtonTexture,
-            titleTexture, tempBabbitTexture, frodoScoreTexture, samScoreTexture, pipScoreTexture;
+            titleTexture, tempBabbitTexture, frodoScoreTexture, samScoreTexture, pipScoreTexture, thanksTexture;
 
         Vector2 frodoSpeed, frodoFontVector2, samSpeed, samFontVector2, pipSpeed, pipFontVector2;
 
-        float seconds, delay, frodoHeart, samHeart, pipHeart, startButtonBounce;
+        float seconds, delay, frodoHeart, samHeart, pipHeart, startButtonBounce, elapsedTimeSeconds, elapsedTimeMinutes;
 
         SpriteEffects frodoEffect, samEffect, pipEffect;
 
@@ -43,6 +43,8 @@ namespace Monogame_1___5_Summative_Assignment
         Screen screen;
 
         Color startButtonColor, backButtonColor, quitButtonColor;
+
+        string timerString;
 
         public Game1()
         {
@@ -143,6 +145,8 @@ namespace Monogame_1___5_Summative_Assignment
             samScoreTexture = Content.Load<Texture2D>("SamwiseBunny-1.png");
             pipScoreTexture = Content.Load<Texture2D>("PippinBunny-1.png");
             scoreFont = Content.Load<SpriteFont>("ScoreFont");
+
+            thanksTexture = Content.Load<Texture2D>("ThanksForPlaying");
         }
 
         protected override void Update(GameTime gameTime)
@@ -271,10 +275,26 @@ namespace Monogame_1___5_Summative_Assignment
                     tempBabbitRect.X = -600;
                     tempBabbit = generator.Next(1, 4);
                 }
+
+                elapsedTimeSeconds = 0f;
+                elapsedTimeMinutes = 0f;
+                frodoScore = 0;
+                samScore = 0;
+                pipScore = 0;
             }
 
             if (screen == Screen.Babbits)
             {
+                elapsedTimeSeconds += (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+                if (elapsedTimeSeconds > 59)
+                {
+                    elapsedTimeSeconds = 0f;
+                    elapsedTimeMinutes++;
+                }
+
+                timerString = elapsedTimeMinutes.ToString("0") + ":" + elapsedTimeSeconds.ToString("00");
+
                 if (seconds > 0)
                 {
                     frodo++;
@@ -670,7 +690,9 @@ namespace Monogame_1___5_Summative_Assignment
 
             if (screen == Screen.EndScreen)
             {
+                titleRect = new Rectangle(25, 10, 750, 400);
 
+                tempBabbitTexture = Content.Load<Texture2D>("BunnyGroup");
             }
 
             base.Update(gameTime);
@@ -684,10 +706,10 @@ namespace Monogame_1___5_Summative_Assignment
 
             _spriteBatch.Begin();
 
-            if (screen == Screen.Intro)
-            {
-                _spriteBatch.Draw(fieldTexture, fieldRect, Color.White);
+            _spriteBatch.Draw(fieldTexture, fieldRect, Color.White);
 
+            if (screen == Screen.Intro)
+            {               
                 _spriteBatch.Draw(tempBabbitTexture, tempBabbitRect, null, Color.White, 0f, Vector2.Zero, SpriteEffects.FlipHorizontally, 0f);
 
                 _spriteBatch.Draw(startButtonTexture, startButtonRect, startButtonColor);
@@ -697,7 +719,6 @@ namespace Monogame_1___5_Summative_Assignment
 
             if (screen == Screen.Babbits)
             {
-                _spriteBatch.Draw(fieldTexture, fieldRect, Color.White);
                 _spriteBatch.Draw(fenceBackTexture, fenceBackRect, Color.White);
 
                 _spriteBatch.Draw(heartTexture, heartScoreRect, Color.White);
@@ -724,6 +745,18 @@ namespace Monogame_1___5_Summative_Assignment
 
                 _spriteBatch.Draw(backButtonTexture, backButtonRect, backButtonColor);
                 _spriteBatch.Draw(quitButtonTexture, quitButtonRect, quitButtonColor);
+
+                _spriteBatch.DrawString(scoreFont, timerString, new Vector2(15, 765), Color.White);
+            }
+
+            if (screen == Screen.EndScreen)
+            {
+                _spriteBatch.Draw(thanksTexture, new Rectangle (229, 35, 342, 106), Color.White);
+                _spriteBatch.Draw(titleTexture, titleRect, Color.White);
+
+                _spriteBatch.Draw(tempBabbitTexture, new Rectangle (75, 400, 650, 322), Color.White);
+
+                _spriteBatch.DrawString(scoreFont, "Press ESC to exit...", new Vector2(315, 765), Color.White);
             }
 
             _spriteBatch.Draw(cursorTexture, cursorRect, Color.White);
