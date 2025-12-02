@@ -1,7 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Reflection.Metadata;
 using System.Xml.Linq;
 
 namespace Monogame_1___5_Summative_Assignment
@@ -15,13 +17,17 @@ namespace Monogame_1___5_Summative_Assignment
 
         Rectangle window, fenceForeRect, fenceBackRect, fieldRect, frodoRect, samRect, pipRect, 
             tempCarrotRect, heartRect, startButtonRect, backButtonRect, cursorRect, quitButtonRect,
-            titleRect, tempBabbitRect, heartScoreRect, frodoScoreRect, samScoreRect, pipScoreRect;
+            titleRect, tempBabbitRect, heartScoreRect, frodoScoreRect, samScoreRect, pipScoreRect,
+            infoButtonRect, infoScreenBackButtonRect;
 
         Texture2D fenceForeTexture, fenceBackTexture, fieldTexture, frodoTexture, samTexture, pipTexture, 
             carrotTexture, heartTexture, startButtonTexture, backButtonTexture, cursorTexture, quitButtonTexture,
-            titleTexture, tempBabbitTexture, frodoScoreTexture, samScoreTexture, pipScoreTexture, thanksTexture;
+            titleTexture, tempBabbitTexture, frodoScoreTexture, samScoreTexture, pipScoreTexture, thanksTexture,
+            infoButtonTexture, filterTexture, infoBoxTexture, maleTexture, femaleTexture, frodoNameTexture, samNameTexture, 
+            pipNameTexture, frodoInfoTexture, samInfoTexture, pipInfoTexture;
 
-        Vector2 frodoSpeed, frodoFontVector2, samSpeed, samFontVector2, pipSpeed, pipFontVector2;
+        Vector2 frodoSpeed, frodoFontVector2, samSpeed, samFontVector2, pipSpeed, pipFontVector2, frodoScoreVector2,
+            samScoreVector2, pipScoreVector2;
 
         float seconds, delay, frodoHeart, samHeart, pipHeart, startButtonBounce, elapsedTimeSeconds, elapsedTimeMinutes;
 
@@ -37,14 +43,19 @@ namespace Monogame_1___5_Summative_Assignment
         {
             Intro,
             Babbits,
+            Pause,
             EndScreen
         }
 
         Screen screen;
 
-        Color startButtonColor, backButtonColor, quitButtonColor;
+        Color startButtonColor, backButtonColor, quitButtonColor, infoButtonColor;
 
         string timerString;
+
+        SoundEffect click, carrotSound;
+
+        SoundEffectInstance mainScreenMusic, gameMusic, endScreenMusic;
 
         public Game1()
         {
@@ -108,7 +119,15 @@ namespace Monogame_1___5_Summative_Assignment
             samScoreRect = new Rectangle(710, 400, 90, 90);
             pipScoreRect = new Rectangle(710, 550, 90, 90);
 
-            base.Initialize();
+            infoButtonRect = new Rectangle(675, 10, 113, 50);
+            infoScreenBackButtonRect = new Rectangle(325, 700, 150, 50);
+
+            frodoScoreVector2 = new Vector2(750, 325);
+            samScoreVector2 = new Vector2(750, 475);
+            pipScoreVector2 = new Vector2(750, 625);
+
+
+        base.Initialize();
         }
 
         protected override void LoadContent()
@@ -122,13 +141,13 @@ namespace Monogame_1___5_Summative_Assignment
             fieldTexture = Content.Load<Texture2D>("Field V2");
 
             frodoTexture = Content.Load<Texture2D>("FrodoBunny-1.png");
-            frodoFont = Content.Load<SpriteFont>("Frodo");
+            frodoFont = Content.Load<SpriteFont>("FrodoFont");
 
             samTexture = Content.Load<Texture2D>("SamwiseBunny-1.png");
-            samFont = Content.Load<SpriteFont>("Samwise");
+            samFont = Content.Load<SpriteFont>("FrodoFont");
 
             pipTexture = Content.Load<Texture2D>("PippinBunny-1.png");
-            pipFont = Content.Load<SpriteFont>("Pippin");
+            pipFont = Content.Load<SpriteFont>("FrodoFont");
 
             carrotTexture = Content.Load<Texture2D>("Carrot");
             heartTexture = Content.Load<Texture2D>("heart V3");
@@ -146,7 +165,30 @@ namespace Monogame_1___5_Summative_Assignment
             pipScoreTexture = Content.Load<Texture2D>("PippinBunny-1.png");
             scoreFont = Content.Load<SpriteFont>("ScoreFont");
 
+            tempBabbitTexture = Content.Load<Texture2D>("PippinBunny-1.png");
+
             thanksTexture = Content.Load<Texture2D>("ThanksForPlaying");
+
+            infoButtonTexture = Content.Load<Texture2D>("InfoButton");
+            filterTexture = Content.Load<Texture2D>("BlackFilter");
+
+            infoBoxTexture = Content.Load<Texture2D>("InfoBox");
+            maleTexture = Content.Load<Texture2D>("Male");
+            femaleTexture = Content.Load<Texture2D>("Female");
+            frodoNameTexture = Content.Load<Texture2D>("Frodo2");
+            samNameTexture = Content.Load<Texture2D>("Samwise");
+            pipNameTexture = Content.Load<Texture2D>("Pippin");
+
+            frodoInfoTexture = Content.Load<Texture2D>("FrodoReal");
+            samInfoTexture = Content.Load<Texture2D>("SamReal");
+            pipInfoTexture = Content.Load<Texture2D>("PippinReal");
+
+            click = Content.Load<SoundEffect>("Click");
+            carrotSound = Content.Load<SoundEffect>("LevelUp");
+
+            mainScreenMusic = Content.Load<SoundEffect>("IntroMusic").CreateInstance();
+            gameMusic = Content.Load<SoundEffect>("GameMusic").CreateInstance();
+            endScreenMusic = Content.Load<SoundEffect>("EndMusic").CreateInstance();
         }
 
         protected override void Update(GameTime gameTime)
@@ -168,14 +210,17 @@ namespace Monogame_1___5_Summative_Assignment
                 if (startButtonRect.Contains(mouseState.Position))
                 {
                     startButtonColor = Color.Green;
+                    cursorTexture = Content.Load<Texture2D>("HandCursorClick");
                 }
                 else
                 {
                     startButtonColor = Color.White;
+                    cursorTexture = Content.Load<Texture2D>("HandCursorOpen");
                 }
 
                 if (startButtonRect.Contains(mouseState.Position) && mouseState.LeftButton == ButtonState.Pressed)
                 {
+                    click.Play();
                     screen = Screen.Babbits;
                 }
 
@@ -281,6 +326,9 @@ namespace Monogame_1___5_Summative_Assignment
                 frodoScore = 0;
                 samScore = 0;
                 pipScore = 0;
+
+                mainScreenMusic.Play();
+                gameMusic.Stop();
             }
 
             if (screen == Screen.Babbits)
@@ -583,6 +631,8 @@ namespace Monogame_1___5_Summative_Assignment
                     frodoHeart = 300;
 
                     frodoScore++;
+
+                    carrotSound.Play();
                 }
                 if (samRect.Contains(tempCarrotRect))
                 {
@@ -590,6 +640,8 @@ namespace Monogame_1___5_Summative_Assignment
                     samHeart = 300;
 
                     samScore++;
+
+                    carrotSound.Play();
                 }
                 if (pipRect.Contains(tempCarrotRect))
                 {
@@ -597,6 +649,8 @@ namespace Monogame_1___5_Summative_Assignment
                     pipHeart = 300;
 
                     pipScore++;
+
+                    carrotSound.Play();
                 }
 
                 if (tempCarrotRect.X == -100)
@@ -661,31 +715,57 @@ namespace Monogame_1___5_Summative_Assignment
 
                 if (backButtonRect.Contains(mouseState.Position))
                 {
-                    backButtonColor = Color.Red;
+                    backButtonColor = Color.Green;
+                    cursorTexture = Content.Load<Texture2D>("HandCursorClick");
                 }
                 else
                 {
                     backButtonColor = Color.White;
+                    cursorTexture = Content.Load<Texture2D>("HandCursorOpen");
                 }
 
                 if (backButtonRect.Contains(mouseState.Position) && mouseState.LeftButton == ButtonState.Pressed)
                 {
+                    click.Play();
                     screen = Screen.Intro;
                 }
 
                 if (quitButtonRect.Contains(mouseState.Position))
                 {
-                    quitButtonColor = Color.Red;
+                    quitButtonColor = Color.Green;
+                    cursorTexture = Content.Load<Texture2D>("HandCursorClick");
                 }
                 else
                 {
                     quitButtonColor = Color.White;
+                    cursorTexture = Content.Load<Texture2D>("HandCursorOpen");
                 }
 
                 if (quitButtonRect.Contains(mouseState.Position) && mouseState.LeftButton == ButtonState.Pressed)
                 {
+                    click.Play();
                     screen = Screen.EndScreen;
                 }
+
+                if (infoButtonRect.Contains(mouseState.Position))
+                {
+                    infoButtonColor = Color.Green;
+                    cursorTexture = Content.Load<Texture2D>("HandCursorClick");
+                }
+                else
+                {
+                    infoButtonColor = Color.White;
+                    cursorTexture = Content.Load<Texture2D>("HandCursorOpen");
+                }
+
+                if (infoButtonRect.Contains(mouseState.Position) && mouseState.LeftButton == ButtonState.Pressed)
+                {
+                    click.Play();
+                    screen = Screen.Pause;
+                }
+
+                mainScreenMusic.Stop();
+                gameMusic.Play();
             }
 
             if (screen == Screen.EndScreen)
@@ -693,6 +773,29 @@ namespace Monogame_1___5_Summative_Assignment
                 titleRect = new Rectangle(25, 10, 750, 400);
 
                 tempBabbitTexture = Content.Load<Texture2D>("BunnyGroup");
+
+                endScreenMusic.Play();
+                gameMusic.Stop();
+            }
+
+            if (screen == Screen.Pause)
+            {
+                if (infoScreenBackButtonRect.Contains(mouseState.Position))
+                {
+                    backButtonColor = Color.Green;
+                    cursorTexture = Content.Load<Texture2D>("HandCursorClick");
+                }
+                else
+                {
+                    backButtonColor = Color.White;
+                    cursorTexture = Content.Load<Texture2D>("HandCursorOpen");
+                }
+
+                if (infoScreenBackButtonRect.Contains(mouseState.Position) && mouseState.LeftButton == ButtonState.Pressed)
+                {
+                    click.Play();
+                    screen = Screen.Babbits;
+                }
             }
 
             base.Update(gameTime);
@@ -725,9 +828,9 @@ namespace Monogame_1___5_Summative_Assignment
                 _spriteBatch.Draw(frodoScoreTexture, frodoScoreRect, Color.White);
                 _spriteBatch.Draw(samScoreTexture, samScoreRect, Color.White);
                 _spriteBatch.Draw(pipScoreTexture, pipScoreRect, Color.White);
-                _spriteBatch.DrawString(scoreFont, Convert.ToString(frodoScore), new Vector2(750, 325), Color.White);
-                _spriteBatch.DrawString(scoreFont, Convert.ToString(samScore), new Vector2(750, 475), Color.White);
-                _spriteBatch.DrawString(scoreFont, Convert.ToString(pipScore), new Vector2(750, 625), Color.White);
+                _spriteBatch.DrawString(scoreFont, Convert.ToString(frodoScore), frodoScoreVector2, Color.White);
+                _spriteBatch.DrawString(scoreFont, Convert.ToString(samScore), samScoreVector2, Color.White);
+                _spriteBatch.DrawString(scoreFont, Convert.ToString(pipScore), pipScoreVector2, Color.White);
 
                 _spriteBatch.Draw(carrotTexture, tempCarrotRect, Color.White);
 
@@ -747,6 +850,8 @@ namespace Monogame_1___5_Summative_Assignment
                 _spriteBatch.Draw(quitButtonTexture, quitButtonRect, quitButtonColor);
 
                 _spriteBatch.DrawString(scoreFont, timerString, new Vector2(15, 765), Color.White);
+
+                _spriteBatch.Draw(infoButtonTexture, infoButtonRect, infoButtonColor);
             }
 
             if (screen == Screen.EndScreen)
@@ -757,6 +862,71 @@ namespace Monogame_1___5_Summative_Assignment
                 _spriteBatch.Draw(tempBabbitTexture, new Rectangle (75, 400, 650, 322), Color.White);
 
                 _spriteBatch.DrawString(scoreFont, "Press ESC to exit...", new Vector2(315, 765), Color.White);
+            }
+
+            if (screen == Screen.Pause)
+            {
+                _spriteBatch.Draw(fenceBackTexture, fenceBackRect, Color.White);
+
+                _spriteBatch.Draw(heartTexture, heartScoreRect, Color.White);
+                _spriteBatch.Draw(frodoScoreTexture, frodoScoreRect, Color.White);
+                _spriteBatch.Draw(samScoreTexture, samScoreRect, Color.White);
+                _spriteBatch.Draw(pipScoreTexture, pipScoreRect, Color.White);
+                _spriteBatch.DrawString(scoreFont, Convert.ToString(frodoScore), new Vector2(750, 325), Color.White);
+                _spriteBatch.DrawString(scoreFont, Convert.ToString(samScore), new Vector2(750, 475), Color.White);
+                _spriteBatch.DrawString(scoreFont, Convert.ToString(pipScore), new Vector2(750, 625), Color.White);
+
+                _spriteBatch.Draw(carrotTexture, tempCarrotRect, Color.White);
+
+                _spriteBatch.Draw(frodoTexture, frodoRect, null, Color.White, 0f, Vector2.Zero, frodoEffect, 0f);
+                _spriteBatch.Draw(samTexture, samRect, null, Color.White, 0f, Vector2.Zero, samEffect, 0f);
+                _spriteBatch.Draw(pipTexture, pipRect, null, Color.White, 0f, Vector2.Zero, pipEffect, 0f);
+
+                _spriteBatch.Draw(fenceForeTexture, fenceForeRect, Color.White);
+
+                _spriteBatch.Draw(heartTexture, heartRect, Color.White);
+
+                _spriteBatch.Draw(backButtonTexture, backButtonRect, Color.White);
+                _spriteBatch.Draw(quitButtonTexture, quitButtonRect, quitButtonColor);
+
+                _spriteBatch.DrawString(scoreFont, timerString, new Vector2(15, 765), Color.White);
+
+                _spriteBatch.Draw(infoButtonTexture, infoButtonRect, Color.White);
+
+                _spriteBatch.Draw(filterTexture, new Rectangle(0, 0, 800, 800), Color.White);
+
+                _spriteBatch.Draw(infoBoxTexture, new Rectangle(150, 75, 500, 173), Color.White);
+                _spriteBatch.Draw(infoBoxTexture, new Rectangle(150, 275, 500, 173), Color.White);
+                _spriteBatch.Draw(infoBoxTexture, new Rectangle(150, 475, 500, 173), Color.White);
+                
+
+                _spriteBatch.Draw(frodoInfoTexture, new Rectangle(185, 96, 162, 130), Color.White);
+                _spriteBatch.Draw(frodoNameTexture, new Rectangle(360, 100, 150, 37), Color.White);
+                _spriteBatch.Draw(femaleTexture, new Rectangle(525, 100, 25, 37), Color.White);
+                _spriteBatch.Draw(Content.Load<Texture2D>("FrodoBunny-1.png"), new Rectangle(330, 135, 110, 110), Color.White);
+                _spriteBatch.Draw(Content.Load<Texture2D>("FrodoBunny-2.png"), new Rectangle(400, 135, 110, 110), Color.White);
+                _spriteBatch.Draw(Content.Load<Texture2D>("FrodoBunny-3.png"), new Rectangle(470, 135, 110, 110), Color.White);
+                _spriteBatch.Draw(Content.Load<Texture2D>("FrodoBunny-4.png"), new Rectangle(540, 135, 110, 110), Color.White);
+
+                _spriteBatch.Draw(samInfoTexture, new Rectangle(185, 296, 162, 130), Color.White);
+                _spriteBatch.Draw(samNameTexture, new Rectangle(360, 300, 215, 37), Color.White);
+                _spriteBatch.Draw(femaleTexture, new Rectangle(590, 300, 25, 37), Color.White);
+                _spriteBatch.Draw(femaleTexture, new Rectangle(525, 100, 25, 37), Color.White);
+                _spriteBatch.Draw(Content.Load<Texture2D>("SamwiseBunny-1.png"), new Rectangle(330, 335, 110, 110), Color.White);
+                _spriteBatch.Draw(Content.Load<Texture2D>("SamwiseBunny-2.png"), new Rectangle(400, 335, 110, 110), Color.White);
+                _spriteBatch.Draw(Content.Load<Texture2D>("SamwiseBunny-3.png"), new Rectangle(470, 335, 110, 110), Color.White);
+                _spriteBatch.Draw(Content.Load<Texture2D>("SamwiseBunny-4.png"), new Rectangle(540, 335, 110, 110), Color.White);
+
+                _spriteBatch.Draw(pipInfoTexture, new Rectangle(185, 496, 162, 130), Color.White);
+                _spriteBatch.Draw(pipNameTexture, new Rectangle(360, 500, 155, 37), Color.White);
+                _spriteBatch.Draw(maleTexture, new Rectangle(530, 500, 37, 37), Color.White);
+                _spriteBatch.Draw(femaleTexture, new Rectangle(525, 100, 25, 37), Color.White);
+                _spriteBatch.Draw(Content.Load<Texture2D>("PippinBunny-1.png"), new Rectangle(330, 535, 110, 110), Color.White);
+                _spriteBatch.Draw(Content.Load<Texture2D>("PippinBunny-2.png"), new Rectangle(400, 535, 110, 110), Color.White);
+                _spriteBatch.Draw(Content.Load<Texture2D>("PippinBunny-3.png"), new Rectangle(470, 535, 110, 110), Color.White);
+                _spriteBatch.Draw(Content.Load<Texture2D>("PippinBunny-4.png"), new Rectangle(540, 535, 110, 110), Color.White);
+
+                _spriteBatch.Draw(backButtonTexture, infoScreenBackButtonRect, backButtonColor);
             }
 
             _spriteBatch.Draw(cursorTexture, cursorRect, Color.White);
