@@ -374,6 +374,12 @@
 /processorParam:TextureFormat=Color
 /build:PippinReal.jpg
 
+#begin popSound.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:popSound.wav
+
 #begin QuitButton.png
 /importer:TextureImporter
 /processor:TextureProcessor

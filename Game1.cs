@@ -24,7 +24,7 @@ namespace Monogame_1___5_Summative_Assignment
             carrotTexture, heartTexture, startButtonTexture, backButtonTexture, cursorTexture, quitButtonTexture,
             titleTexture, tempBabbitTexture, frodoScoreTexture, samScoreTexture, pipScoreTexture, thanksTexture,
             infoButtonTexture, filterTexture, infoBoxTexture, maleTexture, femaleTexture, frodoNameTexture, samNameTexture, 
-            pipNameTexture, frodoInfoTexture, samInfoTexture, pipInfoTexture;
+            pipNameTexture, frodoInfoTexture, samInfoTexture, pipInfoTexture, openHandTexture, pointHandTexture, grabHandTexture;
 
         Vector2 frodoSpeed, frodoFontVector2, samSpeed, samFontVector2, pipSpeed, pipFontVector2, frodoScoreVector2,
             samScoreVector2, pipScoreVector2;
@@ -53,7 +53,7 @@ namespace Monogame_1___5_Summative_Assignment
 
         string timerString;
 
-        SoundEffect click, carrotSound;
+        SoundEffect click, carrotSound, carrotSpawn;
 
         SoundEffectInstance mainScreenMusic, gameMusic, endScreenMusic;
 
@@ -91,7 +91,7 @@ namespace Monogame_1___5_Summative_Assignment
             pipSpeed = new Vector2(2, 2);
             pip = 1;
 
-            tempCarrotRect = new Rectangle(generator.Next(100, 600), generator.Next(100, 600), 75, 75);            
+            tempCarrotRect = new Rectangle(-100, -100, 75, 75);            
 
             seconds = 0;
 
@@ -185,10 +185,15 @@ namespace Monogame_1___5_Summative_Assignment
 
             click = Content.Load<SoundEffect>("Click");
             carrotSound = Content.Load<SoundEffect>("LevelUp");
+            carrotSpawn = Content.Load<SoundEffect>("popSound");
 
             mainScreenMusic = Content.Load<SoundEffect>("IntroMusic").CreateInstance();
             gameMusic = Content.Load<SoundEffect>("GameMusic").CreateInstance();
             endScreenMusic = Content.Load<SoundEffect>("EndMusic").CreateInstance();
+
+            openHandTexture = Content.Load<Texture2D>("HandCursorOpen");
+            pointHandTexture = Content.Load<Texture2D>("HandCursorClick");
+            grabHandTexture = Content.Load<Texture2D>("HandCursorGrab");
         }
 
         protected override void Update(GameTime gameTime)
@@ -210,12 +215,12 @@ namespace Monogame_1___5_Summative_Assignment
                 if (startButtonRect.Contains(mouseState.Position))
                 {
                     startButtonColor = Color.Green;
-                    cursorTexture = Content.Load<Texture2D>("HandCursorClick");
+                    cursorTexture = pointHandTexture;
                 }
                 else
                 {
                     startButtonColor = Color.White;
-                    cursorTexture = Content.Load<Texture2D>("HandCursorOpen");
+                    cursorTexture = openHandTexture;
                 }
 
                 if (startButtonRect.Contains(mouseState.Position) && mouseState.LeftButton == ButtonState.Pressed)
@@ -463,7 +468,7 @@ namespace Monogame_1___5_Summative_Assignment
 
                 if (frodoRect.Contains(mouseState.Position) && mouseState.LeftButton == ButtonState.Pressed)
                 {
-                    cursorTexture = Content.Load<Texture2D>("HandCursorGrab");
+                    cursorTexture = grabHandTexture;
                     frodoRect.X = (mouseState.X - 65);
                     frodoRect.Y = (mouseState.Y - 65);
 
@@ -476,7 +481,7 @@ namespace Monogame_1___5_Summative_Assignment
                 else if (!pipRect.Contains(mouseState.Position) && !samRect.Contains(mouseState.Position) && !frodoRect.Contains(mouseState.Position)
                     || mouseState.LeftButton == ButtonState.Released)
                 {
-                    cursorTexture = Content.Load<Texture2D>("HandCursorOpen");
+                    cursorTexture = openHandTexture;
                 }
 
                 samRect.X += (int)samSpeed.X;
@@ -536,7 +541,7 @@ namespace Monogame_1___5_Summative_Assignment
 
                 if (samRect.Contains(mouseState.Position) && mouseState.LeftButton == ButtonState.Pressed)
                 {
-                    cursorTexture = Content.Load<Texture2D>("HandCursorGrab");
+                    cursorTexture = grabHandTexture;
                     samRect.X = (mouseState.X - 65);
                     samRect.Y = (mouseState.Y - 65);
 
@@ -549,7 +554,7 @@ namespace Monogame_1___5_Summative_Assignment
                 else if (!pipRect.Contains(mouseState.Position) && !samRect.Contains(mouseState.Position) && !frodoRect.Contains(mouseState.Position)
                     || mouseState.LeftButton == ButtonState.Released)
                 {
-                    cursorTexture = Content.Load<Texture2D>("HandCursorOpen");
+                    cursorTexture = openHandTexture;
                 }
 
                 pipRect.X += (int)pipSpeed.X;
@@ -609,7 +614,7 @@ namespace Monogame_1___5_Summative_Assignment
 
                 if (pipRect.Contains(mouseState.Position) && mouseState.LeftButton == ButtonState.Pressed)
                 {
-                    cursorTexture = Content.Load<Texture2D>("HandCursorGrab");
+                    cursorTexture = grabHandTexture;
                     pipRect.X = (mouseState.X - 75);
                     pipRect.Y = (mouseState.Y - 75);
 
@@ -622,7 +627,7 @@ namespace Monogame_1___5_Summative_Assignment
                 else if (!pipRect.Contains(mouseState.Position) && !samRect.Contains(mouseState.Position) && !frodoRect.Contains(mouseState.Position)
                     || mouseState.LeftButton == ButtonState.Released)
                 {
-                    cursorTexture = Content.Load<Texture2D>("HandCursorOpen");
+                    cursorTexture = openHandTexture;
                 }
 
                 if (frodoRect.Contains(tempCarrotRect))
@@ -665,6 +670,11 @@ namespace Monogame_1___5_Summative_Assignment
                     if (delay < 0)
                     {
                         tempCarrotRect = new Rectangle(generator.Next(100, 600), generator.Next(100, 600), 75, 75);
+                    }
+
+                    if (delay == 25)
+                    {
+                        carrotSpawn.Play();
                     }
                 }
 
@@ -713,51 +723,43 @@ namespace Monogame_1___5_Summative_Assignment
                     heartRect = new Rectangle(-100, -100, 50, 50);
                 }
 
-                if (backButtonRect.Contains(mouseState.Position))
+                if (!frodoRect.Contains(mouseState.Position) && !samRect.Contains(mouseState.Position) && !pipRect.Contains(mouseState.Position))
                 {
-                    backButtonColor = Color.Green;
-                    cursorTexture = Content.Load<Texture2D>("HandCursorClick");
-                }
-                else
-                {
-                    backButtonColor = Color.White;
-                    cursorTexture = Content.Load<Texture2D>("HandCursorOpen");
-                }
+                    if (backButtonRect.Contains(mouseState.Position))
+                    {
+                        backButtonColor = Color.Green;
+                        cursorTexture = pointHandTexture;
+                    }
+                    else if (quitButtonRect.Contains(mouseState.Position))
+                    {
+                        quitButtonColor = Color.Green;
+                        cursorTexture = pointHandTexture;
+                    }
+                    else if (infoButtonRect.Contains(mouseState.Position))
+                    {
+                        infoButtonColor = Color.Green;
+                        cursorTexture = pointHandTexture;
+
+                    }
+                    else
+                    {
+                        backButtonColor = Color.White;
+                        quitButtonColor = Color.White;
+                        infoButtonColor = Color.White;
+                        cursorTexture = openHandTexture;
+                    }
+                }              
 
                 if (backButtonRect.Contains(mouseState.Position) && mouseState.LeftButton == ButtonState.Pressed)
                 {
                     click.Play();
                     screen = Screen.Intro;
                 }
-
-                if (quitButtonRect.Contains(mouseState.Position))
-                {
-                    quitButtonColor = Color.Green;
-                    cursorTexture = Content.Load<Texture2D>("HandCursorClick");
-                }
-                else
-                {
-                    quitButtonColor = Color.White;
-                    cursorTexture = Content.Load<Texture2D>("HandCursorOpen");
-                }
-
                 if (quitButtonRect.Contains(mouseState.Position) && mouseState.LeftButton == ButtonState.Pressed)
                 {
                     click.Play();
                     screen = Screen.EndScreen;
-                }
-
-                if (infoButtonRect.Contains(mouseState.Position))
-                {
-                    infoButtonColor = Color.Green;
-                    cursorTexture = Content.Load<Texture2D>("HandCursorClick");
-                }
-                else
-                {
-                    infoButtonColor = Color.White;
-                    cursorTexture = Content.Load<Texture2D>("HandCursorOpen");
-                }
-
+                }              
                 if (infoButtonRect.Contains(mouseState.Position) && mouseState.LeftButton == ButtonState.Pressed)
                 {
                     click.Play();
@@ -766,6 +768,19 @@ namespace Monogame_1___5_Summative_Assignment
 
                 mainScreenMusic.Stop();
                 gameMusic.Play();
+
+                if (frodoScore >= 10)
+                {
+                    frodoScoreVector2 = new Vector2(745, 325);
+                }
+                if (samScore >= 10)
+                {
+                    samScoreVector2 = new Vector2(745, 475);
+                }
+                if (pipScore >= 10)
+                {
+                    pipScoreVector2 = new Vector2(745, 625);
+                }
             }
 
             if (screen == Screen.EndScreen)
@@ -783,12 +798,12 @@ namespace Monogame_1___5_Summative_Assignment
                 if (infoScreenBackButtonRect.Contains(mouseState.Position))
                 {
                     backButtonColor = Color.Green;
-                    cursorTexture = Content.Load<Texture2D>("HandCursorClick");
+                    cursorTexture = pointHandTexture;
                 }
                 else
                 {
                     backButtonColor = Color.White;
-                    cursorTexture = Content.Load<Texture2D>("HandCursorOpen");
+                    cursorTexture = openHandTexture;
                 }
 
                 if (infoScreenBackButtonRect.Contains(mouseState.Position) && mouseState.LeftButton == ButtonState.Pressed)
